@@ -1,0 +1,114 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.Map;
+
+public class InventorySystemTest {
+
+    private Inventory inventory;
+    private Product product1;
+    private Product product2;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the inventory system before each test
+        inventory = new Inventory();
+
+        // Add some sample products
+        product1 = new Product("P001", "Product 1", 25.50, 100);
+        product2 = new Product("P002", "Product 2", 50.00, 200);
+
+        inventory.addProduct(product1);
+        inventory.addProduct(product2);
+    }
+
+    // -------------------- Product Class Tests --------------------
+
+    @Test
+    public void testProductConstructorValid() {
+        // Test that the Product constructor correctly initializes product fields
+        assertEquals("P001", product1.getProductId());
+        assertEquals("Product 1", product1.getName());
+        assertEquals(25.50, product1.getPrice());
+        assertEquals(100, product1.getStock());
+    }
+
+    @Test
+    public void testProductConstructorInvalidPrice() {
+        // Test that creating a product with a negative price throws an exception
+        assertThrows(IllegalArgumentException.class, () -> new Product("P003", "Invalid Product", -5.0, 10));
+    }
+
+    @Test
+    public void testProductConstructorInvalidStock() {
+        // Test that creating a product with negative stock throws an exception
+        assertThrows(IllegalArgumentException.class, () -> new Product("P003", "Invalid Product", 10.0, -1));
+    }
+
+    // -------------------- Inventory Class Tests --------------------
+
+    @Test
+    public void testAddProduct() {
+        // Test that products are added to the inventory correctly
+        assertEquals(2, inventory.getAllProducts().size()); // Should have 2 products after adding product1 and product2
+    }
+
+    @Test
+    public void testAddDuplicateProduct() {
+        // Test that adding a duplicate product ID throws an exception
+        assertThrows(IllegalArgumentException.class, () -> inventory.addProduct(product1));
+    }
+
+    @Test
+    public void testGetProductById() {
+        // Test that products are retrieved correctly by ID
+        Product retrievedProduct = inventory.getProductById("P001");
+        assertEquals(product1, retrievedProduct);
+    }
+
+    @Test
+    public void testPlaceOrder() {
+        // Create an order and add items
+        Order order = new Order();
+        order.addItem(product1, 2); // Adding 2 of product1
+        order.addItem(product2, 1); // Adding 1 of product2
+
+        // Place the order
+        inventory.placeOrder(order);
+
+        // Check that the order is placed correctly
+        assertEquals(1, inventory.getAllOrders().size()); // Only 1 order should be in the list
+        assertTrue(inventory.getAllOrders().get(0).getItems().containsKey(product1)); // Product1 should be in the order
+        assertTrue(inventory.getAllOrders().get(0).getItems().containsKey(product2)); // Product2 should be in the order
+    }
+
+    @Test
+    public void testOrderTotalPrice() {
+        // Create an order and add items
+        Order order = new Order();
+        order.addItem(product1, 2); // 2 of product1
+        order.addItem(product2, 1); // 1 of product2
+
+        // Total price = (2 * 25.50) + (1 * 50.00)
+        double expectedTotalPrice = (2 * 25.50) + (1 * 50.00);
+        assertEquals(expectedTotalPrice, order.getTotalPrice());
+    }
+
+    // -------------------- Edge Case Tests --------------------
+
+    @Test
+    public void testOrderWithInvalidQuantity() {
+        // Test that adding an invalid quantity to an order throws an exception
+        Order order = new Order();
+        assertThrows(IllegalArgumentException.class, () -> order.addItem(product1, -1)); // Negative quantity should throw an exception
+    }
+
+    @Test
+    public void testInventoryWithEmptyProducts() {
+        // Test behavior when no products have been added
+        Inventory emptyInventory = new Inventory();
+        assertEquals(0, emptyInventory.getAllProducts().size()); // Should be empty
+    }
+}
+
